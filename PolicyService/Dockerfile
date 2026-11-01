@@ -1,0 +1,36 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+ENV APP_HOME /opt/app
+RUN mkdir $APP_HOME
+WORKDIR $APP_HOME
+
+COPY PricingService/PricingService.Api/*.csproj /opt/PricingService/PricingService.Api/
+COPY PolicyService/PolicyService.Api/*.csproj $APP_HOME/PolicyService.Api/
+COPY PolicyService/PolicyService/*.csproj $APP_HOME/PolicyService/
+RUN cd $APP_HOME/PolicyService && dotnet restore
+
+COPY PricingService/PricingService.Api /opt/PricingService/PricingService.Api
+COPY PolicyService/PolicyService.Api $APP_HOME/PolicyService.Api/
+COPY PolicyService/PolicyService $APP_HOME/PolicyService/
+RUN cd PolicyService && dotnet build
+
+COPY PolicyService/PolicyService.Test/*.csproj $APP_HOME/PolicyService.Test/
+RUN cd $APP_HOME/PolicyService.Test && dotnet restore
+
+COPY PolicyService/PolicyService.Test $APP_HOME/PolicyService.Test/
+RUN cd $APP_HOME/PolicyService.Test && dotnet build
+
+FROM build AS test
+WORKDIR $APP_HOME/PolicyService.Test
+RUN dotnet test --verbosity:normal
+
+FROM build AS publish
+WORKDIR $APP_HOME/PolicyService
+RUN dotnet publish -c Release -o out
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:5050
+ENV ASPNETCORE_ENVIRONMENT=docker
+COPY --from=publish /opt/app/PolicyService/out ./
+ENTRYPOINT ["dotnet", "PolicyService.dll"]
