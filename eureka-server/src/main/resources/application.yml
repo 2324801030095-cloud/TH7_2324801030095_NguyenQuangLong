@@ -4,6 +4,8 @@ server:
 eureka:
   server:
     waitTimeInMsWhenSyncEmpty: 0
+    expectedClientRenewalIntervalSeconds: 60
+    renewalPercentThreshold: 0.75
   instance:
     hostname: localhost
   client:

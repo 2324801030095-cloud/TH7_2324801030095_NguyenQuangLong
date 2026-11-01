@@ -13,7 +13,7 @@ namespace PolicyService.RestClients;
 
 public interface IPricingClient
 {
-    [Post]
+    [Post("/api/Pricing")]
     Task<CalculatePriceResult> CalculatePrice([Body] CalculatePriceCommand cmd);
 }
 

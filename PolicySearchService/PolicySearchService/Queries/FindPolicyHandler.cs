@@ -20,6 +20,9 @@ public class FindPolicyHandler : IRequestHandler<FindPolicyQuery, FindPolicyResu
 
     public async Task<FindPolicyResult> Handle(FindPolicyQuery request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.QueryText))
+            return new FindPolicyResult { Policies = new List<PolicyDto>() };
+
         var searchResults = await policis.Find(request.QueryText);
 
         return FindPolicyResult(searchResults);
